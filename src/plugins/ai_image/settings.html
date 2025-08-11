@@ -1,67 +1,62 @@
 <div class="form-group">
     <label for="textPrompt" class="form-label">Text Prompt:</label>
-    <input type="text" id="textPrompt" name="textPrompt" placeholder="Type something..." required class="form-input">
+    <input type="text" id="textPrompt" name="textPrompt" placeholder="Describe the image you want to generate..." required class="form-input">
+    <small class="form-help">E-ink optimizations will be automatically added to your prompt</small>
 </div>
 
-
-<!-- Dropdown Options -->
-<div class="form-group dropdown-container">
-    <!-- Image Model Dropdown -->
-    <div class="form-group">
-        <label for="imageModel" class="form-label">Image Model:</label>
-        <select id="imageModel" name="imageModel" class="form-input" onchange="toggleQualityDropdown()">
-            <option value="dall-e-3" selected>DALL·E 3</option>
-            <option value="dall-e-2">DALL·E 2</option>
-        </select>
-    </div>
-
-    <!-- Quality Dropdown -->
-    <div class="form-group">
-        <label for="quality" class="form-label">Quality:</label>
-        <select id="quality" name="quality" class="form-input">
-            <option value="hd">HD</option>
-            <option value="standard" selected>Standard</option>
-        </select>
-    </div>
-</div>
-
+<!-- Model Selection -->
 <div class="form-group">
-    <label for="randomizePrompt" class="form-label">Randomize Text Prompt:</label>
-    <div class="toggle-container">
-        <input type="checkbox" id="randomizePrompt" name="randomizePrompt" class="toggle-checkbox" value="false" onclick="this.value=this.checked ? 'true' : 'false';">
-        <label for="randomizePrompt" class="toggle-label"></label>
-    </div>
+    <label for="imageModel" class="form-label">AI Model:</label>
+    <select id="imageModel" name="imageModel" class="form-input">
+        <!-- Options will be populated by JavaScript -->
+    </select>
+    <small class="form-help" id="modelDescription">Model description will appear here</small>
 </div>
 
 
 <script>
-    function toggleQualityDropdown() {
-        const imageModelDropdown = document.getElementById("imageModel");
-        const qualityDropdown = document.getElementById("quality");
-        const selectedModel = imageModelDropdown.value;
+    // Model data will be passed from the backend
+    const imageModels = {{ image_models | tojsonfilter }};
 
-        if (selectedModel === "dall-e-3") {
-            qualityDropdown.disabled = false; // Enable quality dropdown
-        } else if (selectedModel === "dall-e-2") {
-            qualityDropdown.disabled = true; // Disable quality dropdown
-            qualityDropdown.value = "standard"; // Clear selection
+    function updateModelDescription() {
+        const modelSelect = document.getElementById('imageModel');
+        const descriptionElement = document.getElementById('modelDescription');
+        const selectedModelId = modelSelect.value;
+        
+        const selectedModel = imageModels.find(model => model.id === selectedModelId);
+        if (selectedModel) {
+            descriptionElement.textContent = selectedModel.description;
         }
     }
 
-    // populate form values from plugin settings
-    document.addEventListener('DOMContentLoaded', () => {        
+    // Populate form values from plugin settings
+    document.addEventListener('DOMContentLoaded', () => {
+        const modelSelect = document.getElementById('imageModel');
+        
+        // Populate model dropdown
+        imageModels.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = model.name;
+            modelSelect.appendChild(option);
+        });
+        
+        // Set up change handler
+        modelSelect.addEventListener('change', updateModelDescription);
+        
         if (loadPluginSettings) {
+            // Load saved settings
             document.getElementById('textPrompt').value = pluginSettings.textPrompt || '';
-
-            document.getElementById('randomizePrompt').checked = pluginSettings.randomizePrompt || false;
-
-            // Populate text model
-            document.getElementById('imageModel').value = pluginSettings.imageModel;
-
-            // Populate quality
-            const qualityDropdown = document.getElementById("quality");
-            qualityDropdown.value = pluginSettings.quality || "standard";
-            qualityDropdown.disabled = pluginSettings.imageModel == 'dall-e-2'
+            
+            // Set selected model
+            const savedModel = pluginSettings.imageModel || '@cf/black-forest-labs/flux-1-schnell';
+            modelSelect.value = savedModel;
+        } else {
+            // Set default model
+            modelSelect.value = '@cf/black-forest-labs/flux-1-schnell';
         }
+        
+        // Update description for initially selected model
+        updateModelDescription();
     });
 </script>

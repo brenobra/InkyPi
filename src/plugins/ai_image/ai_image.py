@@ -1,142 +1,169 @@
 from plugins.base_plugin.base_plugin import BasePlugin
-from openai import OpenAI
 from PIL import Image
 from io import BytesIO
 import requests
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
-IMAGE_MODELS = ["dall-e-3", "dall-e-2"]
-DEFAULT_IMAGE_MODEL = "dall-e-3"
+# Cloudflare Workers AI text-to-image models
+IMAGE_MODELS = [
+    {
+        "id": "@cf/black-forest-labs/flux-1-schnell",
+        "name": "FLUX.1 Schnell (Recommended)",
+        "description": "Fast, high-quality generation"
+    },
+    {
+        "id": "@cf/bytedance/stable-diffusion-xl-lightning", 
+        "name": "SDXL Lightning",
+        "description": "Ultra-fast, 1024px images"
+    },
+    {
+        "id": "@cf/lykon/dreamshaper-8-lcm",
+        "name": "DreamShaper 8 LCM", 
+        "description": "Photorealistic focus"
+    },
+    {
+        "id": "@cf/stability/stable-diffusion-xl-base-1.0",
+        "name": "Stable Diffusion XL Base",
+        "description": "Reliable, versatile"
+    },
+    {
+        "id": "@cf/runwayml/stable-diffusion-v1-5-img2img",
+        "name": "Stable Diffusion 1.5 img2img", 
+        "description": "Classic model"
+    },
+    {
+        "id": "@cf/runwayml/stable-diffusion-v1-5-inpainting",
+        "name": "Stable Diffusion 1.5 Inpainting",
+        "description": "Advanced editing"
+    }
+]
 
-IMAGE_QUALITIES = ["hd", "standard"]
-DEFAULT_IMAGE_QUALITY = "standard"
+DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell"
+CLOUDFLARE_API_BASE = "https://gateway.ai.cloudflare.com/v1/d7d9eea07df9b1cd0c93141bd99239b6/inky-pi/workers-ai"
 class AIImage(BasePlugin):
     def generate_settings_template(self):
         template_params = super().generate_settings_template()
         template_params['api_key'] = {
             "required": True,
-            "service": "OpenAI",
-            "expected_key": "OPEN_AI_SECRET"
+            "service": "Cloudflare",
+            "expected_key": "CLOUDFLARE_API_TOKEN"
         }
+        template_params['image_models'] = IMAGE_MODELS
         return template_params
 
     def generate_image(self, settings, device_config):
-
-        api_key = device_config.load_env_key("OPEN_AI_SECRET")
-        if not api_key:
-            raise RuntimeError("OPEN AI API Key not configured.")
+        api_token = device_config.load_env_key("CLOUDFLARE_API_TOKEN")
+        if not api_token:
+            raise RuntimeError("Cloudflare API Token not configured.")
 
         text_prompt = settings.get("textPrompt", "")
+        if not text_prompt.strip():
+            raise RuntimeError("Text prompt is required.")
 
+        # Validate and get model
         image_model = settings.get('imageModel', DEFAULT_IMAGE_MODEL)
-        if image_model not in IMAGE_MODELS:
+        valid_model_ids = [model['id'] for model in IMAGE_MODELS]
+        if image_model not in valid_model_ids:
             image_model = DEFAULT_IMAGE_MODEL
-        image_quality = settings.get('quality', DEFAULT_IMAGE_QUALITY)
-        if image_quality not in IMAGE_QUALITIES:
-            image_quality = DEFAULT_IMAGE_QUALITY
-        randomize_prompt = settings.get('randomizePrompt') == 'true'
 
-        image = None
+        # Add e-ink optimization to prompt
+        optimized_prompt = AIImage.optimize_prompt_for_eink(text_prompt)
+
         try:
-            ai_client = OpenAI(api_key = api_key)
-            if randomize_prompt:
-                text_prompt = AIImage.fetch_image_prompt(ai_client, text_prompt)
-
-            image = AIImage.fetch_image(
-                ai_client,
-                text_prompt,
-                model=image_model,
-                quality=image_quality,
-                orientation=device_config.get_config("orientation")
+            image = AIImage.generate_cloudflare_image(
+                api_token,
+                optimized_prompt,
+                model=image_model
             )
+            
+            # Optimize image for e-ink display
+            image = AIImage.optimize_image_for_eink(image, device_config.get_resolution())
+            
         except Exception as e:
-            logger.error(f"Failed to make Open AI request: {str(e)}")
-            raise RuntimeError("Open AI request failure, please check logs.")
+            logger.error(f"Failed to generate image with Cloudflare AI: {str(e)}")
+            raise RuntimeError(f"Cloudflare AI request failed: {str(e)}")
+        
         return image
 
     @staticmethod
-    def fetch_image(ai_client, prompt, model="dalle-e-3", quality="standard", orientation="horizontal"):
-        logger.info(f"Generating image for prompt: {prompt}, model: {model}, quality: {quality}")
-        prompt += (
-            ". The image should fully occupy the entire canvas without any frames, "
-            "borders, or cropped areas. No blank spaces or artificial framing."
-        )
-        prompt += (
-            "Focus on simplicity, bold shapes, and strong contrast to enhance clarity "
-            "and visual appeal. Avoid excessive detail or complex gradients, ensuring "
-            "the design works well with flat, vibrant colors."
-        )
-        args = {
-            "model": model,
-            "prompt": prompt,
-            "size": "1024x1024",
+    def generate_cloudflare_image(api_token, prompt, model=DEFAULT_IMAGE_MODEL):
+        """Generate image using Cloudflare Workers AI"""
+        logger.info(f"Generating image with model: {model}")
+        logger.info(f"Prompt: {prompt}")
+        
+        url = f"{CLOUDFLARE_API_BASE}/run/{model}"
+        
+        headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json"
         }
-        if model == "dall-e-3":
-            args["size"] = "1792x1024" if orientation == "horizontal" else "1024x1792"
-            args["quality"] = quality
-
-        response = ai_client.images.generate(**args)
-        image_url = response.data[0].url
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-
-        return img
-
+        
+        payload = {
+            "prompt": prompt
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code != 200:
+            error_msg = f"Cloudflare AI API error: {response.status_code}"
+            if response.text:
+                try:
+                    error_data = response.json()
+                    if 'errors' in error_data:
+                        error_msg += f" - {error_data['errors'][0].get('message', 'Unknown error')}"
+                except:
+                    error_msg += f" - {response.text[:200]}"
+            raise RuntimeError(error_msg)
+        
+        # The response should contain the image data
+        image_data = response.content
+        image = Image.open(BytesIO(image_data))
+        
+        return image
+    
     @staticmethod
-    def fetch_image_prompt(ai_client, from_prompt=None):
-        logger.info(f"Getting random image prompt...")
-
-        system_content = (
-            "You are a creative assistant generating extremely random and unique image prompts. "
-            "Avoid common themes. Focus on unexpected, unconventional, and bizarre combinations "
-            "of art style, medium, subjects, time periods, and moods. No repetition. Prompts "
-            "should be 20 words or less and specify random artist, movie, tv show or time period "
-            "for the theme. Do not provide any headers or repeat the request, just provide the "
-            "updated prompt in your response."
+    def optimize_prompt_for_eink(prompt):
+        """Optimize prompt for e-ink display characteristics"""
+        eink_optimizations = (
+            " High contrast black and white, simple bold shapes, "
+            "clean lines, minimal detail, strong contrast, "
+            "suitable for monochrome display"
         )
-        user_content = (
-            "Give me a completely random image prompt, something unexpected and creative! "
-            "Let's see what your AI mind can cook up!"
-        )
-        if from_prompt and from_prompt.strip():
-            system_content = (
-                "You are a creative assistant specializing in generating highly descriptive "
-                "and unique prompts for creating images. When given a short or simple image "
-                "description, your job is to rewrite it into a more detailed, imaginative, "
-                "and descriptive version that captures the essence of the original while "
-                "making it unique and vivid. Avoid adding irrelevant details but feel free "
-                "to include creative and visual enhancements. Avoid common themes. Focus on "
-                "unexpected, unconventional, and bizarre combinations of art style, medium, "
-                "subjects, time periods, and moods. Do not provide any headers or repeat the "
-                "request, just provide your updated prompt in the response. Prompts "
-                "should be 20 words or less and specify random artist, movie, tv show or time "
-                "period for the theme."
-            )
-            user_content = (
-                f"Original prompt: \"{from_prompt}\"\n"
-                "Rewrite it to make it more detailed, imaginative, and unique while staying "
-                "true to the original idea. Include vivid imagery and descriptive details. "
-                "Avoid changing the subject of the prompt."
-            )
-
-        # Make the API call
-        response = ai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_content
-                },
-                {
-                    "role": "user",
-                    "content": user_content
-                }
-            ],
-            temperature=1
-        )
-
-        prompt = response.choices[0].message.content.strip()
-        logger.info(f"Generated random image prompt: {prompt}")
+        
+        # Add e-ink optimizations if not already present
+        if "black and white" not in prompt.lower() and "monochrome" not in prompt.lower():
+            prompt += eink_optimizations
+        
         return prompt
+    
+    @staticmethod
+    def optimize_image_for_eink(image, target_resolution=(250, 122)):
+        """Optimize generated image for e-ink display"""
+        # Convert to grayscale first
+        if image.mode != 'L':
+            image = image.convert('L')
+        
+        # Resize maintaining aspect ratio
+        image.thumbnail(target_resolution, Image.Resampling.LANCZOS)
+        
+        # Create new image with exact target size and paste centered
+        final_image = Image.new('L', target_resolution, 255)  # White background
+        
+        # Calculate position to center the image
+        x = (target_resolution[0] - image.size[0]) // 2
+        y = (target_resolution[1] - image.size[1]) // 2
+        
+        final_image.paste(image, (x, y))
+        
+        # Increase contrast for better e-ink display
+        from PIL import ImageEnhance
+        enhancer = ImageEnhance.Contrast(final_image)
+        final_image = enhancer.enhance(1.5)  # Increase contrast by 50%
+        
+        # Convert back to RGB for compatibility with display system
+        final_image = final_image.convert('RGB')
+        
+        return final_image
