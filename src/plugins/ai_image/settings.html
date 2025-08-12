@@ -16,7 +16,7 @@
 
 <script>
     // Model data will be passed from the backend
-    const imageModels = {{ image_models | tojsonfilter }};
+    const imageModels = {{ image_models | tojson }};
 
     function updateModelDescription() {
         const modelSelect = document.getElementById('imageModel');
