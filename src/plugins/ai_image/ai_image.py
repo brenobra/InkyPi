@@ -119,9 +119,23 @@ class AIImage(BasePlugin):
                     error_msg += f" - {response.text[:200]}"
             raise RuntimeError(error_msg)
         
-        # The response should contain the image data
-        image_data = response.content
-        image = Image.open(BytesIO(image_data))
+        # Parse the JSON response to get the base64 image data
+        try:
+            response_data = response.json()
+            if 'result' in response_data and 'image' in response_data['result']:
+                # Image is base64 encoded in the result.image field
+                import base64
+                image_b64 = response_data['result']['image']
+                image_data = base64.b64decode(image_b64)
+                image = Image.open(BytesIO(image_data))
+            else:
+                # Fallback: try direct binary response
+                image_data = response.content
+                image = Image.open(BytesIO(image_data))
+        except (json.JSONDecodeError, KeyError):
+            # If JSON parsing fails, try treating as direct image data
+            image_data = response.content
+            image = Image.open(BytesIO(image_data))
         
         return image
     
