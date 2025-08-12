@@ -122,3 +122,10 @@ class YourPlugin(BasePlugin):
 - **Image Sources**: URL, folder, upload, Unsplash, APOD
 - **AI Integration**: Text and image generation
 - **Content Feeds**: Comics, newspapers, Wikipedia
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+Anything related to the project itself, we want to make sure you fully understand my request by asking questions and implementing changes only after it is fully understood. You may edit the .md file at any time without permission.

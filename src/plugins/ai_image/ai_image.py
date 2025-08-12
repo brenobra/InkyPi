@@ -41,6 +41,70 @@ IMAGE_MODELS = [
     }
 ]
 
+# Style options for prompt enhancement
+STYLE_OPTIONS = [
+    {
+        "id": "none",
+        "name": "None",
+        "description": "No style enhancement",
+        "prompt_append": ""
+    },
+    {
+        "id": "eink_optimized",
+        "name": "E-ink Optimized", 
+        "description": "Optimized for e-ink displays",
+        "prompt_append": " High contrast black and white, simple bold shapes, clean lines, minimal detail, strong contrast, suitable for monochrome display"
+    },
+    {
+        "id": "high_contrast",
+        "name": "High Contrast",
+        "description": "Bold shapes with strong definition",
+        "prompt_append": " High contrast, bold shapes, strong black and white definition"
+    },
+    {
+        "id": "minimalist",
+        "name": "Minimalist",
+        "description": "Clean and simple design",
+        "prompt_append": " Minimalist design, clean simple lines, uncluttered composition"
+    },
+    {
+        "id": "sketch_style",
+        "name": "Sketch Style",
+        "description": "Hand-drawn appearance",
+        "prompt_append": " Black and white sketch, line art, drawing style"
+    },
+    {
+        "id": "vintage_poster",
+        "name": "Vintage Poster",
+        "description": "Classic poster design",
+        "prompt_append": " Vintage poster style, bold typography, simple graphics"
+    },
+    {
+        "id": "silhouette",
+        "name": "Silhouette",
+        "description": "Strong shapes and contrast",
+        "prompt_append": " Strong silhouettes, solid shapes, dramatic contrast"
+    },
+    {
+        "id": "technical_diagram",
+        "name": "Technical Diagram",
+        "description": "Clean technical illustration",
+        "prompt_append": " Technical illustration, clean diagrams, blueprint style"
+    },
+    {
+        "id": "comic_book",
+        "name": "Comic Book",
+        "description": "Comic art styling",
+        "prompt_append": " Comic book art style, bold outlines, high contrast shading"
+    },
+    {
+        "id": "woodcut_print",
+        "name": "Woodcut Print",
+        "description": "Traditional printmaking style",
+        "prompt_append": " Woodcut print style, bold carved lines, traditional printmaking aesthetic"
+    }
+]
+
 DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell"
 CLOUDFLARE_API_BASE = "https://gateway.ai.cloudflare.com/v1/d7d9eea07df9b1cd0c93141bd99239b6/inky-pi/workers-ai"
 class AIImage(BasePlugin):
@@ -51,6 +115,7 @@ class AIImage(BasePlugin):
             "service": "Cloudflare",
             "expected_key": "CLOUDFLARE_API_TOKEN"
         }
+        template_params['style_options'] = STYLE_OPTIONS
         template_params['image_models'] = IMAGE_MODELS
         return template_params
 
@@ -69,8 +134,9 @@ class AIImage(BasePlugin):
         if image_model not in valid_model_ids:
             image_model = DEFAULT_IMAGE_MODEL
 
-        # Add e-ink optimization to prompt
-        optimized_prompt = AIImage.optimize_prompt_for_eink(text_prompt)
+        # Apply selected style to prompt
+        style_option = settings.get('styleOption', 'none')
+        optimized_prompt = AIImage.apply_style_to_prompt(text_prompt, style_option)
 
         try:
             image = AIImage.generate_cloudflare_image(
@@ -140,17 +206,18 @@ class AIImage(BasePlugin):
         return image
     
     @staticmethod
-    def optimize_prompt_for_eink(prompt):
-        """Optimize prompt for e-ink display characteristics"""
-        eink_optimizations = (
-            " High contrast black and white, simple bold shapes, "
-            "clean lines, minimal detail, strong contrast, "
-            "suitable for monochrome display"
-        )
+    def apply_style_to_prompt(prompt, style_id):
+        """Apply selected style enhancement to prompt"""
+        # Find the style option by id
+        style_append = ""
+        for style in STYLE_OPTIONS:
+            if style['id'] == style_id:
+                style_append = style['prompt_append']
+                break
         
-        # Add e-ink optimizations if not already present
-        if "black and white" not in prompt.lower() and "monochrome" not in prompt.lower():
-            prompt += eink_optimizations
+        # Apply style enhancement
+        if style_append:
+            prompt += style_append
         
         return prompt
     

@@ -1,7 +1,16 @@
 <div class="form-group">
     <label for="textPrompt" class="form-label">Text Prompt:</label>
     <input type="text" id="textPrompt" name="textPrompt" placeholder="Describe the image you want to generate..." required class="form-input">
-    <small class="form-help">E-ink optimizations will be automatically added to your prompt</small>
+    <small class="form-help">Describe what you want to see in the image</small>
+</div>
+
+<!-- Style Selection -->
+<div class="form-group">
+    <label for="styleOption" class="form-label">Style Option:</label>
+    <select id="styleOption" name="styleOption" class="form-input">
+        <!-- Options will be populated by JavaScript -->
+    </select>
+    <small class="form-help" id="styleDescription">Style description will appear here</small>
 </div>
 
 <!-- Model Selection -->
@@ -15,8 +24,20 @@
 
 
 <script>
-    // Model data will be passed from the backend
+    // Data will be passed from the backend
+    const styleOptions = {{ style_options | tojson }};
     const imageModels = {{ image_models | tojson }};
+
+    function updateStyleDescription() {
+        const styleSelect = document.getElementById('styleOption');
+        const descriptionElement = document.getElementById('styleDescription');
+        const selectedStyleId = styleSelect.value;
+        
+        const selectedStyle = styleOptions.find(style => style.id === selectedStyleId);
+        if (selectedStyle) {
+            descriptionElement.textContent = selectedStyle.description;
+        }
+    }
 
     function updateModelDescription() {
         const modelSelect = document.getElementById('imageModel');
@@ -31,7 +52,16 @@
 
     // Populate form values from plugin settings
     document.addEventListener('DOMContentLoaded', () => {
+        const styleSelect = document.getElementById('styleOption');
         const modelSelect = document.getElementById('imageModel');
+        
+        // Populate style dropdown
+        styleOptions.forEach(style => {
+            const option = document.createElement('option');
+            option.value = style.id;
+            option.textContent = style.name;
+            styleSelect.appendChild(option);
+        });
         
         // Populate model dropdown
         imageModels.forEach(model => {
@@ -41,22 +71,29 @@
             modelSelect.appendChild(option);
         });
         
-        // Set up change handler
+        // Set up change handlers
+        styleSelect.addEventListener('change', updateStyleDescription);
         modelSelect.addEventListener('change', updateModelDescription);
         
         if (loadPluginSettings) {
             // Load saved settings
             document.getElementById('textPrompt').value = pluginSettings.textPrompt || '';
             
+            // Set selected style (default to 'none')
+            const savedStyle = pluginSettings.styleOption || 'none';
+            styleSelect.value = savedStyle;
+            
             // Set selected model
             const savedModel = pluginSettings.imageModel || '@cf/black-forest-labs/flux-1-schnell';
             modelSelect.value = savedModel;
         } else {
-            // Set default model
+            // Set defaults
+            styleSelect.value = 'none';
             modelSelect.value = '@cf/black-forest-labs/flux-1-schnell';
         }
         
-        // Update description for initially selected model
+        // Update descriptions for initially selected options
+        updateStyleDescription();
         updateModelDescription();
     });
 </script>
