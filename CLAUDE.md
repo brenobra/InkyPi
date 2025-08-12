@@ -78,9 +78,13 @@ class YourPlugin(BasePlugin):
   - @cf/stability/stable-diffusion-xl-base-1.0
   - @cf/runwayml/stable-diffusion-v1-5-img2img
   - @cf/runwayml/stable-diffusion-v1-5-inpainting
+- **Style Options**: 
+  - 10 selectable prompt enhancement styles (None, E-ink Optimized, High Contrast, Minimalist, Sketch, Vintage Poster, Silhouette, Technical Diagram, Comic Book, Woodcut Print)
+  - User-configurable dropdown with dynamic descriptions
+  - Default: "None" for no style enhancement
 - **E-ink Optimizations**: 
-  - Automatic prompt enhancement for high contrast B&W
-  - Image resizing and centering for 250x122 resolution
+  - Dynamic image resizing based on device configuration
+  - Image centering for any display resolution
   - Contrast enhancement for better e-ink visibility
 - **Testing**: Core functionality tested and verified
 - **Deployment**: Running on Pi Zero 2W at 192.168.0.153
@@ -90,6 +94,9 @@ class YourPlugin(BasePlugin):
 - ✅ Replaced OpenAI DALL-E with superior models (FLUX.1, SDXL, etc.)
 - ✅ E-ink display optimizations implemented
 - ✅ Web interface updated with model selection
+- ✅ **Style dropdown with 10 prompt enhancement options**
+- ✅ **UI field order: Prompt → Style → Model**
+- ✅ **Dynamic resolution support - no more hardcoded 250x122**
 - ✅ Code tested and committed to GitHub
 - ✅ **Fixed Cloudflare API response parsing (base64 JSON handling)**
 - ✅ **Fully tested and verified working on Pi at 192.168.0.153**
@@ -98,9 +105,10 @@ class YourPlugin(BasePlugin):
 ## AI Image Plugin Status - COMPLETE ✅
 - **API Integration**: Cloudflare Workers AI fully functional
 - **Models Available**: FLUX.1 Schnell, SDXL Lightning, DreamShaper 8 LCM, SDXL Base, SD 1.5 variants
+- **Style Options**: 10 selectable prompt enhancement styles with user-friendly dropdown
 - **Testing Results**: Successfully generates and displays images on e-ink screen
 - **Error Resolution**: Fixed "cannot identify image file" issue with proper JSON/base64 parsing
-- **Web Interface**: Fully functional with model selection and real-time updates
+- **Web Interface**: Fully functional with Prompt → Style → Model field order and real-time updates
 - **Status**: Ready for production use
 
 ## Repository Information

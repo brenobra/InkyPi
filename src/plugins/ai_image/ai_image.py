@@ -222,7 +222,7 @@ class AIImage(BasePlugin):
         return prompt
     
     @staticmethod
-    def optimize_image_for_eink(image, target_resolution=(250, 122)):
+    def optimize_image_for_eink(image, target_resolution):
         """Optimize generated image for e-ink display"""
         # Convert to grayscale first
         if image.mode != 'L':
