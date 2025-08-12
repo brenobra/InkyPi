@@ -98,6 +98,7 @@ class AIImage(BasePlugin):
         
         headers = {
             "Authorization": f"Bearer {api_token}",
+            "cf-aig-authorization": f"Bearer {api_token}",
             "Content-Type": "application/json"
         }
         
