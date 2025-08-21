@@ -12,32 +12,32 @@ IMAGE_MODELS = [
     {
         "id": "@cf/black-forest-labs/flux-1-schnell",
         "name": "FLUX.1 Schnell (Recommended)",
-        "description": "Fast, high-quality generation"
+        "description": "Fast, high-quality generation (square images)"
     },
     {
         "id": "@cf/bytedance/stable-diffusion-xl-lightning", 
         "name": "SDXL Lightning",
-        "description": "Ultra-fast, 1024px images"
+        "description": "Ultra-fast, supports display ratio"
     },
     {
         "id": "@cf/lykon/dreamshaper-8-lcm",
         "name": "DreamShaper 8 LCM", 
-        "description": "Photorealistic focus"
+        "description": "Photorealistic focus, supports display ratio"
     },
     {
         "id": "@cf/stability/stable-diffusion-xl-base-1.0",
         "name": "Stable Diffusion XL Base",
-        "description": "Reliable, versatile"
+        "description": "Reliable, versatile, supports display ratio"
     },
     {
         "id": "@cf/runwayml/stable-diffusion-v1-5-img2img",
         "name": "Stable Diffusion 1.5 img2img", 
-        "description": "Classic model"
+        "description": "Classic model, supports display ratio"
     },
     {
         "id": "@cf/runwayml/stable-diffusion-v1-5-inpainting",
         "name": "Stable Diffusion 1.5 Inpainting",
-        "description": "Advanced editing"
+        "description": "Advanced editing, supports display ratio"
     }
 ]
 
@@ -139,10 +139,15 @@ class AIImage(BasePlugin):
         optimized_prompt = AIImage.apply_style_to_prompt(text_prompt, style_option)
 
         try:
+            # Get display resolution for aspect ratio support
+            display_resolution = device_config.get_resolution()
+            
             image = AIImage.generate_cloudflare_image(
                 api_token,
                 optimized_prompt,
-                model=image_model
+                model=image_model,
+                width=display_resolution[0],
+                height=display_resolution[1]
             )
             
             # Optimize image for e-ink display
@@ -156,7 +161,7 @@ class AIImage(BasePlugin):
         return image
 
     @staticmethod
-    def generate_cloudflare_image(api_token, prompt, model=DEFAULT_IMAGE_MODEL):
+    def generate_cloudflare_image(api_token, prompt, model=DEFAULT_IMAGE_MODEL, width=None, height=None):
         """Generate image using Cloudflare Workers AI"""
         logger.info(f"Generating image with model: {model}")
         logger.info(f"Prompt: {prompt}")
@@ -169,9 +174,18 @@ class AIImage(BasePlugin):
             "Content-Type": "application/json"
         }
         
+        # Build payload with prompt
         payload = {
             "prompt": prompt
         }
+        
+        # Add width/height for models that support it (all except FLUX.1 Schnell)
+        if model != "@cf/black-forest-labs/flux-1-schnell" and width and height:
+            payload["width"] = width
+            payload["height"] = height
+            logger.info(f"Using custom dimensions: {width}x{height}")
+        else:
+            logger.info("Using default dimensions (model doesn't support custom size)")
         
         response = requests.post(url, headers=headers, json=payload)
         
