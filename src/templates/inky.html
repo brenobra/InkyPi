@@ -22,7 +22,7 @@
 
         <!-- Display the current image -->
         <div class="image-container">
-            <img src="{{ url_for('static', filename='images/current_image.png') }}" alt="Current Image">
+            <img src="{{ url_for('static', filename='images/current_image.png') }}?v={{ image_cache_bust }}" alt="Current Image">
         </div>
 
         <!-- Separator -->
