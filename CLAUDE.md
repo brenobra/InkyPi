@@ -68,7 +68,7 @@ class YourPlugin(BasePlugin):
 - **Test Plugin**: `scripts/test_plugin.py`
 
 ## AI Image Plugin - Cloudflare Integration ✅ IMPLEMENTED
-- **Status**: Fully implemented and tested, ready for deployment
+- **Status**: Fully implemented, tested, and enhanced with color support
 - **API Endpoint**: `https://gateway.ai.cloudflare.com/v1/d7d9eea07df9b1cd0c93141bd99239b6/inky-pi/workers-ai`
 - **Authentication**: Bearer token via `CLOUDFLARE_API_TOKEN` environment variable
 - **Available Models**:
@@ -81,12 +81,19 @@ class YourPlugin(BasePlugin):
 - **Style Options**: 
   - 10 selectable prompt enhancement styles (None, E-ink Optimized, High Contrast, Minimalist, Sketch, Vintage Poster, Silhouette, Technical Diagram, Comic Book, Woodcut Print)
   - User-configurable dropdown with dynamic descriptions
+  - Color-neutral style prompts for both color and grayscale modes
   - Default: "None" for no style enhancement
+- **Color Support**: 
+  - **NEW**: "Convert to Grayscale" checkbox for user control
+  - Default: Color preservation for color displays (Inky Spectra, etc.)
+  - Optional: Grayscale conversion for B&W displays or aesthetic preference
+  - Automatic mode detection and optimization
 - **E-ink Optimizations**: 
   - Dynamic image resizing based on device configuration
   - Image centering for any display resolution
   - Contrast enhancement for better e-ink visibility
-- **Testing**: Core functionality tested and verified
+  - Color/grayscale aware background creation
+- **Testing**: Core functionality and color support tested and verified
 - **Deployment**: Running on Pi Zero 2W at 192.168.0.153
 
 ## Implementation Status
@@ -95,21 +102,24 @@ class YourPlugin(BasePlugin):
 - ✅ E-ink display optimizations implemented
 - ✅ Web interface updated with model selection
 - ✅ **Style dropdown with 10 prompt enhancement options**
-- ✅ **UI field order: Prompt → Style → Model**
+- ✅ **UI field order: Prompt → Style → Model → Grayscale Option**
 - ✅ **Dynamic resolution support - no more hardcoded 250x122**
+- ✅ **Color display support with user-controlled grayscale conversion**
+- ✅ **Color-neutral style prompts for versatile usage**
 - ✅ Code tested and committed to GitHub
 - ✅ **Fixed Cloudflare API response parsing (base64 JSON handling)**
 - ✅ **Fully tested and verified working on Pi at 192.168.0.153**
-- ✅ **Production ready - all tests successful**
+- ✅ **Production ready with full color support**
 
 ## AI Image Plugin Status - COMPLETE ✅
 - **API Integration**: Cloudflare Workers AI fully functional
 - **Models Available**: FLUX.1 Schnell, SDXL Lightning, DreamShaper 8 LCM, SDXL Base, SD 1.5 variants
-- **Style Options**: 10 selectable prompt enhancement styles with user-friendly dropdown
-- **Testing Results**: Successfully generates and displays images on e-ink screen
+- **Style Options**: 10 selectable prompt enhancement styles with color-neutral prompts
+- **Color Support**: Full color display support with optional grayscale conversion
+- **Testing Results**: Successfully generates and displays color/grayscale images on e-ink screen
 - **Error Resolution**: Fixed "cannot identify image file" issue with proper JSON/base64 parsing
-- **Web Interface**: Fully functional with Prompt → Style → Model field order and real-time updates
-- **Status**: Ready for production use
+- **Web Interface**: Fully functional with Prompt → Style → Model → Grayscale Option and real-time updates
+- **Status**: Ready for production use with enhanced color capabilities
 
 ## Repository Information
 - **Original**: https://github.com/fatihak/InkyPi

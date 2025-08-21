@@ -22,6 +22,15 @@
     <small class="form-help" id="modelDescription">Model description will appear here</small>
 </div>
 
+<!-- Grayscale Conversion Option -->
+<div class="form-group">
+    <label class="form-label">
+        <input type="checkbox" id="convertToGrayscale" name="convertToGrayscale">
+        Convert to Grayscale
+    </label>
+    <small class="form-help">Convert generated image to black and white for better contrast on monochrome displays</small>
+</div>
+
 
 <script>
     // Data will be passed from the backend
@@ -86,10 +95,14 @@
             // Set selected model
             const savedModel = pluginSettings.imageModel || '@cf/black-forest-labs/flux-1-schnell';
             modelSelect.value = savedModel;
+            
+            // Set grayscale conversion (default to false for color preservation)
+            document.getElementById('convertToGrayscale').checked = pluginSettings.convertToGrayscale || false;
         } else {
             // Set defaults
             styleSelect.value = 'none';
             modelSelect.value = '@cf/black-forest-labs/flux-1-schnell';
+            document.getElementById('convertToGrayscale').checked = false;
         }
         
         // Update descriptions for initially selected options

@@ -53,13 +53,13 @@ STYLE_OPTIONS = [
         "id": "eink_optimized",
         "name": "E-ink Optimized", 
         "description": "Optimized for e-ink displays",
-        "prompt_append": " High contrast black and white, simple bold shapes, clean lines, minimal detail, strong contrast, suitable for monochrome display"
+        "prompt_append": " High contrast, simple bold shapes, clean lines, minimal detail, strong definition, suitable for electronic paper display"
     },
     {
         "id": "high_contrast",
         "name": "High Contrast",
         "description": "Bold shapes with strong definition",
-        "prompt_append": " High contrast, bold shapes, strong black and white definition"
+        "prompt_append": " High contrast, bold shapes, strong definition"
     },
     {
         "id": "minimalist",
@@ -71,7 +71,7 @@ STYLE_OPTIONS = [
         "id": "sketch_style",
         "name": "Sketch Style",
         "description": "Hand-drawn appearance",
-        "prompt_append": " Black and white sketch, line art, drawing style"
+        "prompt_append": " Sketch style, line art, drawing style"
     },
     {
         "id": "vintage_poster",
@@ -146,7 +146,8 @@ class AIImage(BasePlugin):
             )
             
             # Optimize image for e-ink display
-            image = AIImage.optimize_image_for_eink(image, device_config.get_resolution())
+            convert_to_grayscale = settings.get("convertToGrayscale", False)
+            image = AIImage.optimize_image_for_eink(image, device_config.get_resolution(), convert_to_grayscale)
             
         except Exception as e:
             logger.error(f"Failed to generate image with Cloudflare AI: {str(e)}")
@@ -222,17 +223,20 @@ class AIImage(BasePlugin):
         return prompt
     
     @staticmethod
-    def optimize_image_for_eink(image, target_resolution):
+    def optimize_image_for_eink(image, target_resolution, convert_to_grayscale=False):
         """Optimize generated image for e-ink display"""
-        # Convert to grayscale first
-        if image.mode != 'L':
+        # Convert to grayscale if requested
+        if convert_to_grayscale and image.mode != 'L':
             image = image.convert('L')
         
         # Resize maintaining aspect ratio
         image.thumbnail(target_resolution, Image.Resampling.LANCZOS)
         
         # Create new image with exact target size and paste centered
-        final_image = Image.new('L', target_resolution, 255)  # White background
+        if convert_to_grayscale:
+            final_image = Image.new('L', target_resolution, 255)  # White background for grayscale
+        else:
+            final_image = Image.new('RGB', target_resolution, (255, 255, 255))  # White background for color
         
         # Calculate position to center the image
         x = (target_resolution[0] - image.size[0]) // 2
@@ -245,7 +249,8 @@ class AIImage(BasePlugin):
         enhancer = ImageEnhance.Contrast(final_image)
         final_image = enhancer.enhance(1.5)  # Increase contrast by 50%
         
-        # Convert back to RGB for compatibility with display system
-        final_image = final_image.convert('RGB')
+        # Convert to RGB for compatibility with display system (if not already)
+        if final_image.mode != 'RGB':
+            final_image = final_image.convert('RGB')
         
         return final_image
