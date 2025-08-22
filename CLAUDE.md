@@ -106,27 +106,20 @@ class YourPlugin(BasePlugin):
 - ✅ **Dynamic resolution support - no more hardcoded 250x122**
 - ✅ **Color display support with user-controlled grayscale conversion**
 - ✅ **Color-neutral style prompts for versatile usage**
-- ✅ **ALL 6 models now support display aspect ratio (800×480)**
-- ✅ **FLUX.1 Schnell uses 16:9 aspect ratio (closest to 5:3 display ratio)**
-- ✅ **Real-time image updates with HTTP cache headers and bfcache handling**
 - ✅ Code tested and committed to GitHub
 - ✅ **Fixed Cloudflare API response parsing (base64 JSON handling)**
 - ✅ **Fully tested and verified working on Pi at 192.168.0.153**
-- ✅ **Production ready with full color support and optimal aspect ratios**
+- ✅ **Production ready with full color support**
 
 ## AI Image Plugin Status - COMPLETE ✅
 - **API Integration**: Cloudflare Workers AI fully functional
 - **Models Available**: FLUX.1 Schnell, SDXL Lightning, DreamShaper 8 LCM, SDXL Base, SD 1.5 variants
-- **Aspect Ratio Support**: ALL 6 models now support display-optimized aspect ratios
-  - FLUX.1 Schnell: 16:9 aspect ratio (closest to 800×480 display)
-  - SDXL Models: Direct 800×480 width/height parameters
 - **Style Options**: 10 selectable prompt enhancement styles with color-neutral prompts
 - **Color Support**: Full color display support with optional grayscale conversion
-- **Real-time Updates**: HTTP cache headers + bfcache handling for instant image updates
-- **Testing Results**: Successfully generates and displays optimized images on e-ink screen
+- **Testing Results**: Successfully generates and displays color/grayscale images on e-ink screen
 - **Error Resolution**: Fixed "cannot identify image file" issue with proper JSON/base64 parsing
 - **Web Interface**: Fully functional with Prompt → Style → Model → Grayscale Option and real-time updates
-- **Status**: Ready for production use with optimal display integration
+- **Status**: Ready for production use with enhanced color capabilities
 
 ## Repository Information
 - **Original**: https://github.com/fatihak/InkyPi
