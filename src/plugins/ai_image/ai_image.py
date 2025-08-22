@@ -25,7 +25,7 @@ IMAGE_MODELS = [
         "description": "Photorealistic focus, supports display ratio"
     },
     {
-        "id": "@cf/stability/stable-diffusion-xl-base-1.0",
+        "id": "@cf/stabilityai/stable-diffusion-xl-base-1.0",
         "name": "Stable Diffusion XL Base",
         "description": "Reliable, versatile, supports display ratio"
     },

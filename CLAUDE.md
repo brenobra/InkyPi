@@ -75,7 +75,7 @@ class YourPlugin(BasePlugin):
   - @cf/black-forest-labs/flux-1-schnell (default, recommended)
   - @cf/bytedance/stable-diffusion-xl-lightning
   - @cf/lykon/dreamshaper-8-lcm
-  - @cf/stability/stable-diffusion-xl-base-1.0
+  - @cf/stabilityai/stable-diffusion-xl-base-1.0
   - @cf/runwayml/stable-diffusion-v1-5-img2img
   - @cf/runwayml/stable-diffusion-v1-5-inpainting
 - **Style Options**: 
