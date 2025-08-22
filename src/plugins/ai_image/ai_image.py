@@ -12,7 +12,7 @@ IMAGE_MODELS = [
     {
         "id": "@cf/black-forest-labs/flux-1-schnell",
         "name": "FLUX.1 Schnell (Recommended)",
-        "description": "Fast, high-quality generation (square images)"
+        "description": "Fast, high-quality generation, supports display ratio"
     },
     {
         "id": "@cf/bytedance/stable-diffusion-xl-lightning", 
@@ -179,13 +179,19 @@ class AIImage(BasePlugin):
             "prompt": prompt
         }
         
-        # Add width/height for models that support it (all except FLUX.1 Schnell)
-        if model != "@cf/black-forest-labs/flux-1-schnell" and width and height:
+        # Add dimensions based on model capabilities
+        if model == "@cf/black-forest-labs/flux-1-schnell":
+            # FLUX.1 Schnell uses aspect_ratio parameter, 16:9 closest to 800x480 display
+            payload["aspect_ratio"] = "16:9"
+            payload["megapixels"] = "1"
+            logger.info("Using FLUX aspect ratio: 16:9 (optimized for 800x480 display)")
+        elif width and height:
+            # SDXL and other models use width/height parameters
             payload["width"] = width
             payload["height"] = height
             logger.info(f"Using custom dimensions: {width}x{height}")
         else:
-            logger.info("Using default dimensions (model doesn't support custom size)")
+            logger.info("Using default dimensions")
         
         response = requests.post(url, headers=headers, json=payload)
         
